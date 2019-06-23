@@ -19,6 +19,7 @@ class SchoolScoreByName:
         self.year = year
         self.province = province
         self.id_to_schoolname = dict()
+        self.id_to_schooltype = dict()
 
     def get_school_id(self):
         i = 1
@@ -32,6 +33,16 @@ class SchoolScoreByName:
             for school in r["data"]["item"]:
                 school_ids.append(school["school_id"])
                 self.id_to_schoolname[str(school["school_id"])] = school["name"]
+                if school["school_type"] == 6000:
+                    self.id_to_schooltype[str(school["school_id"])] = "普通本科"
+                elif school["school_type"] == 6001:
+                    self.id_to_schooltype[str(school["school_id"])] = "专科（高职）"
+                elif school["school_type"] == 6002:
+                    self.id_to_schooltype[str(school["school_id"])] = "独立学院"
+                elif school["school_type"] == 6003:
+                    self.id_to_schooltype[str(school["school_id"])] = "中外合作办学"
+                elif school["school_type"] == 6007:
+                    self.id_to_schooltype[str(school["school_id"])] = "其他"
             i += 1
         return school_ids
 
@@ -43,6 +54,7 @@ class SchoolScoreByName:
         except Exception:
             print(res.text)
             # traceback.print_exc()
+            time.sleep(0.2)
             return {}
         time.sleep(0.2)
         return r["data"]['item']
@@ -53,18 +65,18 @@ class SchoolScoreByName:
         file_name = "{}_{}_{}.csv".format(self.year, self.name, self.province)
         with open(file_name, "w", encoding='utf-8-sig') as f:
             w = csv.writer(f)
-            s = ["学校名", "最高分", "平均分", "最低分", "最低排名", "省控线", "录取批次"]
+            s = ["学校名", "办学类型", "最高分", "平均分", "最低分", "最低排名", "省控线", "录取批次"]
             w.writerow(s)
             for i in school_ids:
                 print("正在查询学校{}:{}的分数线".format(i, self.id_to_schoolname[str(i)]))
                 data = self._get_school_score(i)
                 if not data:
                     print("无法查询到学校{}:{}的分数线".format(i, self.id_to_schoolname[str(i)]))
-                    s = [self.id_to_schoolname[str(i)], "--", "--", "--", "--", "--", "--"]
+                    s = [self.id_to_schoolname[str(i)], self.id_to_schooltype[str(i)], "--", "--", "--", "--", "--", "--"]
                     w.writerow(s)
                     continue
                 for d in data:
-                    s = [self.id_to_schoolname[str(d["school_id"])], d["max"], d["average"], d["min"], d["min_section"], d["proscore"], d["local_batch_name"]]
+                    s = [self.id_to_schoolname[str(d["school_id"])], self.id_to_schooltype[d["school_id"]], d["max"], d["average"], d["min"], d["min_section"], d["proscore"], d["local_batch_name"]]
                     w.writerow(s)
 
 
