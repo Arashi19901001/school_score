@@ -8,8 +8,8 @@ import csv
 class SchoolScoreByName:
     def __init__(self, name, max_page, year="2018", province="33"):
         # max_page的范围自己去找, 在https://gkcx.eol.cn/school/search?schoolflag=&argschtype=%E6%99%AE%E9%80%9A%E6%9C%AC%E7%A7%91&province=&recomschprop=&keyWord1=师范
-        # 填上查询条件，以及少选条件
-        # 我这是查询条件是师范，筛选条件是普通本科, 一共有7页
+        # 填上查询条件
+        # 我这是查询条件是师范, 一共有7页
         # 33为浙江, 其他省份自己查找
         self.max_page = int(max_page)
         self.name = name
@@ -25,7 +25,7 @@ class SchoolScoreByName:
         school_ids = list()
         while i <= self.max_page:
             print("正在查询第{}页学校信息".format(i))
-            url = "https://api.eol.cn/gkcx/api/?access_token=&admissions=&central=&department=&dual_class=&f211=&f985=&is_dual_class=&keyword={}&page={}&province_id=&request_type=1&school_type=6000&signsafe=&size=20&sort=view_total&type=&uri=apigkcx/api/school/hotlists".format(self.name, i)
+            url = "https://api.eol.cn/gkcx/api/?access_token=&admissions=&central=&department=&dual_class=&f211=&f985=&is_dual_class=&keyword={}&page={}&province_id=&request_type=1&school_type=&&signsafe=&size=20&sort=view_total&type=&uri=apigkcx/api/school/hotlists".format(self.name, i)
             res = requests.get(url, headers=self.headers)
             time.sleep(1)
             r = res.json()
