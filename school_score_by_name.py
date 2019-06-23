@@ -10,6 +10,7 @@ class SchoolScoreByName:
         # max_page的范围自己去找, 在https://gkcx.eol.cn/school/search?schoolflag=&argschtype=%E6%99%AE%E9%80%9A%E6%9C%AC%E7%A7%91&province=&recomschprop=&keyWord1=师范
         # 填上查询条件，以及少选条件
         # 我这是查询条件是师范，筛选条件是普通本科, 一共有7页
+        # 33为浙江, 其他省份自己查找
         self.max_page = int(max_page)
         self.name = name
         self.headers = {
@@ -34,7 +35,7 @@ class SchoolScoreByName:
             i += 1
         return school_ids
 
-    def _get_school_score(self, school_id, year="2018", province="33"):
+    def _get_school_score(self, school_id):
         url = "https://static-data.eol.cn/www/2.0/schoolprovinceindex/{}/{}/{}/3/1.json".format(str(self.year), str(school_id), str(self.province))
         res = requests.get(url, headers=self.headers)
         try:
@@ -50,7 +51,7 @@ class SchoolScoreByName:
         school_ids = self.get_school_id()
         print(self.id_to_schoolname)
         file_name = "{}_{}_{}.csv".format(self.year, self.name, self.province)
-        with open(file_name, "w") as f:
+        with open(file_name, "w", encoding='utf-8-sig') as f:
             w = csv.writer(f)
             s = ["学校名", "最高分", "平均分", "最低分", "最低排名", "省控线", "录取批次"]
             w.writerow(s)
@@ -59,6 +60,8 @@ class SchoolScoreByName:
                 data = self._get_school_score(i)
                 if not data:
                     print("无法查询到学校{}:{}的分数线".format(i, self.id_to_schoolname[str(i)]))
+                    s = [self.id_to_schoolname[str(i)], "--", "--", "--", "--", "--", "--"]
+                    w.writerow(s)
                     continue
                 for d in data:
                     s = [self.id_to_schoolname[str(d["school_id"])], d["max"], d["average"], d["min"], d["min_section"], d["proscore"], d["local_batch_name"]]
