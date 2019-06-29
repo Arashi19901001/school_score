@@ -1,43 +1,39 @@
 # -*- coding: utf-8 -*-
-# import traceback
+
 import requests
 import time
 import csv
 
 
-class SchoolScoreByName:
-    def __init__(self, name, year="2018", province="33"):
-        # https://gkcx.eol.cn/school/search?schoolflag=&argschtype=%E6%99%AE%E9%80%9A%E6%9C%AC%E7%A7%91&province=&recomschprop=&keyWord1=师范
-        # 填上查询条件
-        # 我这是查询条件是师范
-        # 33为浙江, 其他省份自己查找
-        self.max_page = 0
-        self.name = name
+class SchoolScoreByMajor:
+    def __init__(self, majorid, major, year="2018", province="33"):
+        # majorid 可以根据get_id_by_major_name.py获得
+        # major起到备注作用, 决定了后面的文件名
+        self.majorid = majorid
+        self.name = major
+        self.year = year
+        self.province = province
         self.headers = {
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36"
         }
-        self.get_max_page()
-        self.year = year
-        self.province = province
         self.id_to_schoolname = dict()
         self.id_to_schooltype = dict()
 
-    def get_max_page(self):
-        url = "https://api.eol.cn/gkcx/api/?access_token=&admissions=&central=&department=&dual_class=&f211=&f985=&is_dual_class=&keyword={}&page={}&province_id=&request_type=1&school_type=&&signsafe=&size=20&sort=view_total&type=&uri=apigkcx/api/school/hotlists".format(self.name, 1)
+    def get_school_id(self):
+        url = "https://api.eol.cn/gkcx/api/?access_token=&keyword=&page=1&province_id=&request_type=1&school_type=&signsafe=&size=20&special_id={}&type=&uri=apidata/api/gk/schoolSpecial/lists".format(self.majorid)
         res = requests.get(url, headers=self.headers)
         time.sleep(1)
         r = res.json()
         total = int(r["data"]["numFound"])
-        self.max_page = total / 20
+        max_page = total / 20
         if total % 20 != 0:
-            self.max_page += 1
+            max_page += 1
 
-    def get_school_id(self):
         i = 1
         school_ids = list()
-        while i <= self.max_page:
+        while i <= max_page:
             print("正在查询第{}页学校信息".format(i))
-            url = "https://api.eol.cn/gkcx/api/?access_token=&admissions=&central=&department=&dual_class=&f211=&f985=&is_dual_class=&keyword={}&page={}&province_id=&request_type=1&school_type=&&signsafe=&size=20&sort=view_total&type=&uri=apigkcx/api/school/hotlists".format(self.name, i)
+            url = "https://api.eol.cn/gkcx/api/?access_token=&keyword=&page={}&province_id=&request_type=1&school_type=&signsafe=&size=20&special_id={}&type=&uri=apidata/api/gk/schoolSpecial/lists".format(i, self.majorid)
             res = requests.get(url, headers=self.headers)
             time.sleep(1)
             r = res.json()
@@ -94,12 +90,13 @@ class SchoolScoreByName:
 
 if __name__ == "__main__":
     # usage example:
-    # python3 school_score_by_name.py -n 师范 -y 2018 -p 33
+    # python3 school_score_by_major.py -n 教育学 -m 27 -y 2018 -p 33
     import argparse
-    parser = argparse.ArgumentParser(description='根据学校的名称获取该学校的信息')
-    parser.add_argument("-n", "--name", help="学校的名称", required=True)
+    parser = argparse.ArgumentParser(description='根据专业的id获取开设该专业的学校的信息')
+    parser.add_argument("-n", "--major", help="专业的名称, 会用来标注文件名", required=True)
+    parser.add_argument("-m", "--majorid", help="专业的id", required=True)
     parser.add_argument("-y", "--year", help="年份", default="2018")
     parser.add_argument("-p", "--province", help="省份代码, 33为浙江", default="33")
     args = vars(parser.parse_args())
-    s = SchoolScoreByName(args["name"], args["year"], args["province"])
+    s = SchoolScoreByMajor(args["majorid"], args["major"], args["year"], args["province"])
     s.gen_json()
